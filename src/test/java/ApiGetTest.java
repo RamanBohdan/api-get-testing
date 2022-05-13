@@ -1,41 +1,45 @@
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.junit.jupiter.api.Disabled;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ApiGetTest {
-
-    private final static String URL = "https://restful-booker.herokuapp.com/booking";
-    private final static String key = "bookingid";
-    private final static String value = "168";
+public class ApiGetTest extends AbstractTest {
 
     @Test
-    public void testApiGetTestingStatusCode() throws IOException {
-        HttpGet request = new HttpGet(URL);
-        CloseableHttpResponse response = HttpClientBuilder.create().build().execute(request);
+    public void testApiGetTestingStatusCode() {
+        String url = "https://restful-booker.herokuapp.com/booking";
+        myClient.sendGet(url);
 
-        assertEquals(response.getStatusLine().getStatusCode(), 200);
+        assertEquals(myClient.getStatusCode(), 200);
     }
 
     @Test
-    public void testApiGetTestingBookingId() throws IOException, ParseException {
-        HttpGet request = new HttpGet(URL);
-        CloseableHttpResponse response = HttpClientBuilder.create().build().execute(request);
-        String responseText = EntityUtils.toString(response.getEntity());
+    public void testApiGetTestingBookingId() throws IOException {
+        String url = "https://restful-booker.herokuapp.com/booking";
+        String key = "bookingid";
+        int value = 168;
+        HttpUriRequest request = new HttpGet(url);
 
-        JSONParser jsonParse = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParse.parse(responseText);
-        JSONArray bookingId = (JSONArray) jsonObject.get("bookingid");
+        CloseableHttpResponse httpResponse = HttpClientBuilder.create().build().execute(request);
+        String responseBody = EntityUtils.toString(httpResponse.getEntity());
 
+        JSONArray jsonArray = new JSONArray(responseBody);
+        List<Integer> bodyList = new ArrayList<>();
+        for (Object jsonObject : jsonArray) {
+            bodyList.add(((JSONObject) jsonObject).getInt(key));
+        }
+
+        assertTrue(bodyList.contains(value));
     }
 }
